@@ -235,7 +235,7 @@ flag_similar_characters_block(const common::BlockPatternMatchVector& PM, InputIt
 
     SearchBoundMask BoundMask;
     size_t start_range = std::min(Bound + 1, P_len);
-    BoundMask.words = common::ceildiv(start_range, 64);
+    BoundMask.words = 1 + start_range / 64;
     BoundMask.empty_words = 0;
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
     BoundMask.first_mask = (uint64_t)-1;
