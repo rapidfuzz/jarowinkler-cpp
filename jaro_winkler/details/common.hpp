@@ -7,9 +7,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <vector>
+#include <iterator>
 #include <type_traits>
-#include <iterator> 
+#include <vector>
 
 namespace jaro_winkler {
 namespace common {
@@ -22,35 +22,22 @@ namespace common {
 
 /* taken from https://stackoverflow.com/a/30766365/11335032 */
 template <typename T>
-  struct is_iterator {
-  static char test(...);
+struct is_iterator {
+    static char test(...);
 
-  template <typename U,
-    typename=typename std::iterator_traits<U>::difference_type,
-    typename=typename std::iterator_traits<U>::pointer,
-    typename=typename std::iterator_traits<U>::reference,
-    typename=typename std::iterator_traits<U>::value_type,
-    typename=typename std::iterator_traits<U>::iterator_category
-  > static long test(U&&);
+    template <typename U, typename = typename std::iterator_traits<U>::difference_type,
+              typename = typename std::iterator_traits<U>::pointer,
+              typename = typename std::iterator_traits<U>::reference,
+              typename = typename std::iterator_traits<U>::value_type,
+              typename = typename std::iterator_traits<U>::iterator_category>
+    static long test(U&&);
 
-  constexpr static bool value = std::is_same<decltype(test(std::declval<T>())),long>::value;
+    constexpr static bool value = std::is_same<decltype(test(std::declval<T>())), long>::value;
 };
 
 constexpr double result_cutoff(double result, double score_cutoff)
 {
     return (result >= score_cutoff) ? result : 0;
-}
-
-constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
-{
-    return result_cutoff(
-        (lensum > 0) ? (1.0 - static_cast<double>(dist) / static_cast<double>(lensum)) : 1.0,
-        score_cutoff);
-}
-
-static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum)
-{
-    return static_cast<size_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff)));
 }
 
 template <typename T, typename U>
@@ -84,9 +71,9 @@ std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2
  * Removes common prefix of two string views // todo
  */
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
+int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
 {
-    size_t prefix = static_cast<size_t>(
+    int64_t prefix = static_cast<int64_t>(
         std::distance(first1, common::mismatch(first1, last1, first2, last2).first));
     first1 += prefix;
     first2 += prefix;
@@ -103,7 +90,7 @@ struct BitvectorHashmap {
     {}
 
     template <typename CharT>
-    void insert(CharT key, size_t pos)
+    void insert(CharT key, int64_t pos)
     {
         insert_mask(key, 1ull << pos);
     }
@@ -111,7 +98,7 @@ struct BitvectorHashmap {
     template <typename CharT>
     void insert_mask(CharT key, uint64_t mask)
     {
-        size_t i = lookup((uint64_t)key);
+        int64_t i = lookup((uint64_t)key);
         m_map[i].key = key;
         m_map[i].value |= mask;
     }
@@ -127,15 +114,15 @@ private:
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    size_t lookup(uint64_t key) const
+    int64_t lookup(uint64_t key) const
     {
-        size_t i = key % 128;
+        int64_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
         }
 
-        size_t perturb = key;
+        int64_t perturb = key;
         while (true) {
             i = ((i * 5) + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
@@ -168,7 +155,7 @@ struct PatternMatchVector {
     void insert(InputIt1 first, InputIt1 last)
     {
         uint64_t mask = 1;
-        for (size_t i = 0; i < std::distance(first, last); ++i) {
+        for (int64_t i = 0; i < std::distance(first, last); ++i) {
             auto key = first[i];
             if (key >= 0 && key <= 255) {
                 m_extendedAscii[key] |= mask;
@@ -181,7 +168,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(CharT key, size_t pos)
+    void insert(CharT key, int64_t pos)
     {
         uint64_t mask = 1ull << pos;
         if (key >= 0 && key <= 255) {
@@ -219,7 +206,7 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(size_t block, CharT key, int pos)
+    void insert(int64_t block, CharT key, int pos)
     {
         uint64_t mask = 1ull << pos;
 
@@ -235,20 +222,20 @@ struct BlockPatternMatchVector {
     template <typename InputIt1>
     void insert(InputIt1 first, InputIt1 last)
     {
-        size_t len = std::distance(first, last);
+        int64_t len = std::distance(first, last);
         m_block_count = ceildiv(len, 64);
         m_map.resize(m_block_count);
         m_extendedAscii.resize(m_block_count * 256);
 
-        for (size_t i = 0; i < len; ++i) {
-            size_t block = i / 64;
-            size_t pos = i % 64;
+        for (int64_t i = 0; i < len; ++i) {
+            int64_t block = i / 64;
+            int64_t pos = i % 64;
             insert(block, first[i], pos);
         }
     }
 
     template <typename CharT>
-    uint64_t get(size_t block, CharT key) const
+    uint64_t get(int64_t block, CharT key) const
     {
         assert(block < m_block_count);
         if (key >= 0 && key <= 255) {
@@ -262,7 +249,7 @@ struct BlockPatternMatchVector {
 private:
     std::vector<BitvectorHashmap> m_map;
     std::vector<uint64_t> m_extendedAscii;
-    size_t m_block_count;
+    int64_t m_block_count;
 };
 
 /**@}*/

@@ -18,21 +18,21 @@ struct FlaggedCharsMultiword {
 };
 
 struct SearchBoundMask {
-    size_t words = 0;
-    size_t empty_words = 0;
+    int64_t words = 0;
+    int64_t empty_words = 0;
     uint64_t last_mask = 0;
     uint64_t first_mask = 0;
 };
 
 struct TextPosition {
-    TextPosition(size_t Word_, size_t WordPos_) : Word(Word_), WordPos(WordPos_)
+    TextPosition(int64_t Word_, int64_t WordPos_) : Word(Word_), WordPos(WordPos_)
     {}
-    size_t Word;
-    size_t WordPos;
+    int64_t Word;
+    int64_t WordPos;
 };
 
-static inline double jaro_calculate_similarity(size_t P_len, size_t T_len, size_t CommonChars,
-                                               size_t Transpositions)
+static inline double jaro_calculate_similarity(int64_t P_len, int64_t T_len, int64_t CommonChars,
+                                               int64_t Transpositions)
 {
     Transpositions /= 2;
     double Sim = (double)CommonChars / (double)P_len + (double)CommonChars / (double)T_len +
@@ -43,7 +43,7 @@ static inline double jaro_calculate_similarity(size_t P_len, size_t T_len, size_
 /**
  * @brief filter matches below score_cutoff based on string lengths
  */
-static inline bool jaro_length_filter(size_t P_len, size_t T_len, double score_cutoff)
+static inline bool jaro_length_filter(int64_t P_len, int64_t T_len, double score_cutoff)
 {
     if (!T_len || !P_len) return false;
 
@@ -56,7 +56,7 @@ static inline bool jaro_length_filter(size_t P_len, size_t T_len, double score_c
 /**
  * @brief filter matches below score_cutoff based on string lengths and common characters
  */
-static inline bool jaro_common_char_filter(size_t P_len, size_t T_len, size_t CommonChars,
+static inline bool jaro_common_char_filter(int64_t P_len, int64_t T_len, int64_t CommonChars,
                                            double score_cutoff)
 {
     if (!CommonChars) return false;
@@ -66,14 +66,14 @@ static inline bool jaro_common_char_filter(size_t P_len, size_t T_len, size_t Co
     return Sim >= score_cutoff;
 }
 
-static inline size_t count_common_chars(const FlaggedCharsWord& flagged)
+static inline int64_t count_common_chars(const FlaggedCharsWord& flagged)
 {
     return intrinsics::popcount64(flagged.P_flag);
 }
 
-static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
+static inline int64_t count_common_chars(const FlaggedCharsMultiword& flagged)
 {
-    size_t CommonChars = 0;
+    int64_t CommonChars = 0;
     if (flagged.P_flag.size() < flagged.T_flag.size()) {
         for (uint64_t flag : flagged.P_flag) {
             CommonChars += intrinsics::popcount64(flag);
@@ -90,11 +90,12 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 template <typename InputIt1, typename InputIt2>
 static inline FlaggedCharsWord
 flag_similar_characters_word(const common::PatternMatchVector& PM, InputIt1 P_first,
-                             InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, size_t Bound)
+                             InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, int64_t Bound)
 {
     using namespace intrinsics;
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
+    int64_t P_len = std::distance(P_first, P_last);
+    (void)P_len;
+    int64_t T_len = std::distance(T_first, T_last);
     assert(P_len <= 64);
     assert(T_len <= 64);
     assert(Bound > P_len || P_len - Bound <= T_len);
@@ -103,7 +104,7 @@ flag_similar_characters_word(const common::PatternMatchVector& PM, InputIt1 P_fi
 
     uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
 
-    size_t j = 0;
+    int64_t j = 0;
     for (; j < std::min(Bound, T_len); ++j) {
         uint64_t PM_j = PM.get(T_first[j]) & BoundMask & (~flagged.P_flag);
 
@@ -128,11 +129,12 @@ flag_similar_characters_word(const common::PatternMatchVector& PM, InputIt1 P_fi
 template <typename InputIt1, typename InputIt2>
 static inline FlaggedCharsWord
 flag_similar_characters_word(const common::BlockPatternMatchVector& PM, InputIt1 P_first,
-                             InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, size_t Bound)
+                             InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, int64_t Bound)
 {
     using namespace intrinsics;
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
+    int64_t P_len = std::distance(P_first, P_last);
+    (void)P_len;
+    int64_t T_len = std::distance(T_first, T_last);
     assert(P_len <= 64);
     assert(T_len <= 64);
     assert(Bound > P_len || P_len - Bound <= T_len);
@@ -141,7 +143,7 @@ flag_similar_characters_word(const common::BlockPatternMatchVector& PM, InputIt1
 
     uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
 
-    size_t j = 0;
+    int64_t j = 0;
     for (; j < std::min(Bound, T_len); ++j) {
         uint64_t PM_j = PM.get(0, T_first[j]) & BoundMask & (~flagged.P_flag);
 
@@ -165,15 +167,15 @@ flag_similar_characters_word(const common::BlockPatternMatchVector& PM, InputIt1
 
 template <typename CharT>
 static inline void flag_similar_characters_step(const common::BlockPatternMatchVector& PM,
-                                                CharT T_j, FlaggedCharsMultiword& flagged, size_t j,
-                                                SearchBoundMask BoundMask)
+                                                CharT T_j, FlaggedCharsMultiword& flagged,
+                                                int64_t j, SearchBoundMask BoundMask)
 {
     using namespace intrinsics;
 
-    size_t j_word = j / 64;
-    size_t j_pos = j % 64;
-    size_t word = BoundMask.empty_words;
-    size_t last_word = word + BoundMask.words;
+    int64_t j_word = j / 64;
+    int64_t j_pos = j % 64;
+    int64_t word = BoundMask.empty_words;
+    int64_t last_word = word + BoundMask.words;
 
     if (BoundMask.words == 1) {
         uint64_t PM_j = PM.get(word, T_j) & BoundMask.last_mask & BoundMask.first_mask &
@@ -216,34 +218,30 @@ static inline void flag_similar_characters_step(const common::BlockPatternMatchV
 template <typename InputIt1, typename InputIt2>
 static inline FlaggedCharsMultiword
 flag_similar_characters_block(const common::BlockPatternMatchVector& PM, InputIt1 P_first,
-                              InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, size_t Bound)
+                              InputIt1 P_last, InputIt2 T_first, InputIt2 T_last, int64_t Bound)
 {
     using namespace intrinsics;
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
     assert(P_len > 64 || T_len > 64);
     assert(Bound > P_len || P_len - Bound <= T_len);
     assert(Bound >= 31);
 
-    const size_t TextWords = common::ceildiv(T_len, 64);
-    const size_t PatternWords = common::ceildiv(P_len, 64);
-    size_t FullBoundSize = 2 * Bound + 1;
+    int64_t TextWords = common::ceildiv(T_len, 64);
+    int64_t PatternWords = common::ceildiv(P_len, 64);
 
     FlaggedCharsMultiword flagged;
     flagged.T_flag.resize(TextWords);
     flagged.P_flag.resize(PatternWords);
 
     SearchBoundMask BoundMask;
-    size_t start_range = std::min(Bound + 1, P_len);
+    int64_t start_range = std::min(Bound + 1, P_len);
     BoundMask.words = 1 + start_range / 64;
     BoundMask.empty_words = 0;
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
     BoundMask.first_mask = (uint64_t)-1;
 
-    for (size_t j = 0; j < T_len; ++j) {
-        size_t j_word = j / 64;
-        size_t j_pos = j % 64;
-
+    for (int64_t j = 0; j < T_len; ++j) {
         flag_similar_characters_step(PM, T_first[j], flagged, j, BoundMask);
 
         if (j + Bound + 1 < P_len) {
@@ -268,14 +266,14 @@ flag_similar_characters_block(const common::BlockPatternMatchVector& PM, InputIt
 }
 
 template <typename InputIt1>
-static inline size_t count_transpositions_word(const common::PatternMatchVector& PM,
-                                               InputIt1 T_first, InputIt1 T_last,
-                                               const FlaggedCharsWord& flagged)
+static inline int64_t count_transpositions_word(const common::PatternMatchVector& PM,
+                                                InputIt1 T_first, InputIt1,
+                                                const FlaggedCharsWord& flagged)
 {
     using namespace intrinsics;
     uint64_t P_flag = flagged.P_flag;
     uint64_t T_flag = flagged.T_flag;
-    size_t Transpositions = 0;
+    int64_t Transpositions = 0;
     while (T_flag) {
         uint64_t PatternFlagMask = blsi(P_flag);
 
@@ -289,14 +287,14 @@ static inline size_t count_transpositions_word(const common::PatternMatchVector&
 }
 
 template <typename InputIt1>
-static inline size_t count_transpositions_word(const common::BlockPatternMatchVector& PM,
-                                               InputIt1 T_first, InputIt1 T_last,
-                                               const FlaggedCharsWord& flagged)
+static inline int64_t count_transpositions_word(const common::BlockPatternMatchVector& PM,
+                                                InputIt1 T_first, InputIt1,
+                                                const FlaggedCharsWord& flagged)
 {
     using namespace intrinsics;
     uint64_t P_flag = flagged.P_flag;
     uint64_t T_flag = flagged.T_flag;
-    size_t Transpositions = 0;
+    int64_t Transpositions = 0;
     while (T_flag) {
         uint64_t PatternFlagMask = blsi(P_flag);
 
@@ -310,18 +308,17 @@ static inline size_t count_transpositions_word(const common::BlockPatternMatchVe
 }
 
 template <typename InputIt1>
-static inline size_t count_transpositions_block(const common::BlockPatternMatchVector& PM,
-                                                InputIt1 T_first, InputIt1 T_last,
-                                                const FlaggedCharsMultiword& flagged,
-                                                size_t FlaggedChars)
+static inline int64_t
+count_transpositions_block(const common::BlockPatternMatchVector& PM, InputIt1 T_first, InputIt1,
+                           const FlaggedCharsMultiword& flagged, int64_t FlaggedChars)
 {
     using namespace intrinsics;
-    size_t TextWord = 0;
-    size_t PatternWord = 0;
+    int64_t TextWord = 0;
+    int64_t PatternWord = 0;
     uint64_t T_flag = flagged.T_flag[TextWord];
     uint64_t P_flag = flagged.P_flag[PatternWord];
 
-    size_t Transpositions = 0;
+    int64_t Transpositions = 0;
     while (FlaggedChars) {
         while (!T_flag) {
             TextWord++;
@@ -353,8 +350,8 @@ template <typename InputIt1, typename InputIt2>
 double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
                        double score_cutoff)
 {
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
 
     /* filter out based on the length difference between the two strings */
     if (!jaro_length_filter(P_len, T_len, score_cutoff)) {
@@ -368,7 +365,7 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
     /* since jaro uses a sliding window some parts of T/P might never be in
      * range an can be removed ahead of time
      */
-    size_t Bound = 0;
+    int64_t Bound = 0;
     if (T_len > P_len) {
         Bound = T_len / 2 - 1;
         if (T_len > P_len + Bound) {
@@ -383,10 +380,10 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
     }
 
     /* common prefix never includes Transpositions */
-    size_t CommonChars = common::remove_common_prefix(P_first, P_last, T_first, T_last);
-    size_t Transpositions = 0;
-    size_t P_view_len = std::distance(P_first, P_last);
-    size_t T_view_len = std::distance(T_first, T_last);
+    int64_t CommonChars = common::remove_common_prefix(P_first, P_last, T_first, T_last);
+    int64_t Transpositions = 0;
+    int64_t P_view_len = std::distance(P_first, P_last);
+    int64_t T_view_len = std::distance(T_first, T_last);
 
     if (!P_view_len || !T_view_len) {
         /* already has correct number of common chars and transpositions */
@@ -405,7 +402,7 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
     else {
         common::BlockPatternMatchVector PM(P_first, P_last);
         auto flagged = flag_similar_characters_block(PM, P_first, P_last, T_first, T_last, Bound);
-        size_t FlaggedChars = count_common_chars(flagged);
+        int64_t FlaggedChars = count_common_chars(flagged);
         CommonChars += FlaggedChars;
 
         if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) {
@@ -423,8 +420,8 @@ template <typename InputIt1, typename InputIt2>
 double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_first, InputIt1 P_last,
                        InputIt2 T_first, InputIt2 T_last, double score_cutoff)
 {
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
 
     /* filter out based on the length difference between the two strings */
     if (!jaro_length_filter(P_len, T_len, score_cutoff)) {
@@ -438,7 +435,7 @@ double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_fir
     /* since jaro uses a sliding window some parts of T/P might never be in
      * range an can be removed ahead of time
      */
-    size_t Bound = 0;
+    int64_t Bound = 0;
     if (T_len > P_len) {
         Bound = T_len / 2 - 1;
         if (T_len > P_len + Bound) {
@@ -453,10 +450,10 @@ double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_fir
     }
 
     /* common prefix never includes Transpositions */
-    size_t CommonChars = 0;
-    size_t Transpositions = 0;
-    size_t P_view_len = std::distance(P_first, P_last);
-    size_t T_view_len = std::distance(T_first, T_last);
+    int64_t CommonChars = 0;
+    int64_t Transpositions = 0;
+    int64_t P_view_len = std::distance(P_first, P_last);
+    int64_t T_view_len = std::distance(T_first, T_last);
 
     if (!P_view_len || !T_view_len) {
         /* already has correct number of common chars and transpositions */
@@ -473,7 +470,7 @@ double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_fir
     }
     else {
         auto flagged = flag_similar_characters_block(PM, P_first, P_last, T_first, T_last, Bound);
-        size_t FlaggedChars = count_common_chars(flagged);
+        int64_t FlaggedChars = count_common_chars(flagged);
         CommonChars += FlaggedChars;
 
         if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) {
@@ -491,11 +488,11 @@ template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
                                double prefix_weight, double score_cutoff)
 {
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
-    size_t min_len = std::min(P_len, T_len);
-    size_t prefix = 0;
-    size_t max_prefix = (min_len >= 4) ? 4 : min_len;
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
+    int64_t min_len = std::min(P_len, T_len);
+    int64_t prefix = 0;
+    int64_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
         if (T_first[prefix] != P_first[prefix]) {
@@ -529,11 +526,11 @@ double jaro_winkler_similarity(const common::BlockPatternMatchVector& PM, InputI
                                InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
                                double prefix_weight, double score_cutoff)
 {
-    size_t P_len = std::distance(P_first, P_last);
-    size_t T_len = std::distance(T_first, T_last);
-    size_t min_len = std::min(P_len, T_len);
-    size_t prefix = 0;
-    size_t max_prefix = (min_len >= 4) ? 4 : min_len;
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
+    int64_t min_len = std::min(P_len, T_len);
+    int64_t prefix = 0;
+    int64_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
         if (T_first[prefix] != P_first[prefix]) {

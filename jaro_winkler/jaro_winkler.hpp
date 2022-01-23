@@ -43,10 +43,9 @@ namespace jaro_winkler {
  */
 template <typename InputIt1, typename InputIt2>
 typename std::enable_if<
-    common::is_iterator<InputIt1>::value && common::is_iterator<InputIt2>::value, double
->::type
+    common::is_iterator<InputIt1>::value && common::is_iterator<InputIt2>::value, double>::type
 jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               double prefix_weight = 0.1, double score_cutoff = 0.0)
+                        double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
     if (prefix_weight < 0.0 || prefix_weight > 0.25) {
         throw std::invalid_argument("prefix_weight has to be between 0.0 and 0.25");
@@ -57,10 +56,11 @@ jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputI
 }
 
 template <typename S1, typename S2>
-double jaro_winkler_similarity(const S1& s1, const S2& s2,
-                               double prefix_weight = 0.1, double score_cutoff = 0.0)
+double jaro_winkler_similarity(const S1& s1, const S2& s2, double prefix_weight = 0.1,
+                               double score_cutoff = 0.0)
 {
-    return jaro_winkler_similarity(std::begin(s1), std::end(s1), std::begin(s2), std::end(s2),  prefix_weight, score_cutoff );
+    return jaro_winkler_similarity(std::begin(s1), std::end(s1), std::begin(s2), std::end(s2),
+                                   prefix_weight, score_cutoff);
 }
 
 template <typename CharT1>
@@ -82,8 +82,8 @@ struct CachedJaroWinklerSimilarity {
     template <typename InputIt2>
     double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const
     {
-        return detail::jaro_winkler_similarity(PM, std::begin(s1), std::end(s1), first2, last2, prefix_weight,
-                                               score_cutoff);
+        return detail::jaro_winkler_similarity(PM, std::begin(s1), std::end(s1), first2, last2,
+                                               prefix_weight, score_cutoff);
     }
 
     template <typename S2>
@@ -139,28 +139,27 @@ double jaro_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt
 }
 
 template <typename S1, typename S2>
-double jaro_similarity(const S1& s1, const S2& s2,
-                               double score_cutoff = 0.0)
+double jaro_similarity(const S1& s1, const S2& s2, double score_cutoff = 0.0)
 {
-    return jaro_similarity(std::begin(s1), std::end(s1), std::begin(s2), std::end(s2),  score_cutoff );
+    return jaro_similarity(std::begin(s1), std::end(s1), std::begin(s2), std::end(s2),
+                           score_cutoff);
 }
 
 template <typename CharT1>
 struct CachedJaroSimilarity {
     template <typename InputIt1>
-    CachedJaroSimilarity(InputIt1 first1, InputIt1 last1)
-        : s1(first1, last1), PM(first1, last1)
+    CachedJaroSimilarity(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(first1, last1)
     {}
 
     template <typename S1>
-    CachedJaroSimilarity(const S1& s1)
-        : CachedJaroSimilarity(std::begin(s1), std::end(s1))
+    CachedJaroSimilarity(const S1& s1) : CachedJaroSimilarity(std::begin(s1), std::end(s1))
     {}
 
     template <typename InputIt2>
     double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const
     {
-        return detail::jaro_similarity(PM, std::begin(s1), std::end(s1), first2, last2, score_cutoff);
+        return detail::jaro_similarity(PM, std::begin(s1), std::end(s1), first2, last2,
+                                       score_cutoff);
     }
 
     template <typename S2>
