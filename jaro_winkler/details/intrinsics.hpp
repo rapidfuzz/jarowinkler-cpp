@@ -28,7 +28,7 @@ bool bittest(T a, int bit)
     return (a >> bit) & 1;
 }
 
-static inline int64_t popcount64(uint64_t x)
+static inline int64_t popcount(uint64_t x)
 {
     const uint64_t m1 = 0x5555555555555555;
     const uint64_t m2 = 0x3333333333333333;

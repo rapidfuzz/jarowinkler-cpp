@@ -68,7 +68,7 @@ static inline bool jaro_common_char_filter(int64_t P_len, int64_t T_len, int64_t
 
 static inline int64_t count_common_chars(const FlaggedCharsWord& flagged)
 {
-    return intrinsics::popcount64(flagged.P_flag);
+    return intrinsics::popcount(flagged.P_flag);
 }
 
 static inline int64_t count_common_chars(const FlaggedCharsMultiword& flagged)
@@ -76,12 +76,12 @@ static inline int64_t count_common_chars(const FlaggedCharsMultiword& flagged)
     int64_t CommonChars = 0;
     if (flagged.P_flag.size() < flagged.T_flag.size()) {
         for (uint64_t flag : flagged.P_flag) {
-            CommonChars += intrinsics::popcount64(flag);
+            CommonChars += intrinsics::popcount(flag);
         }
     }
     else {
         for (uint64_t flag : flagged.T_flag) {
-            CommonChars += intrinsics::popcount64(flag);
+            CommonChars += intrinsics::popcount(flag);
         }
     }
     return CommonChars;
