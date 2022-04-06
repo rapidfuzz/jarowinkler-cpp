@@ -98,7 +98,7 @@ struct BitvectorHashmap {
     template <typename CharT>
     void insert_mask(CharT key, uint64_t mask)
     {
-        int64_t i = lookup((uint64_t)key);
+        uint64_t i = lookup((uint64_t)key);
         m_map[i].key = key;
         m_map[i].value |= mask;
     }
@@ -111,18 +111,18 @@ struct BitvectorHashmap {
 
 private:
     /**
-     * lookup key inside the hasmap using a similar collision resolution
+     * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    int64_t lookup(uint64_t key) const
+    uint64_t lookup(uint64_t key) const
     {
-        int64_t i = key % 128;
+        uint64_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
         }
 
-        int64_t perturb = key;
+        uint64_t perturb = key;
         while (true) {
             i = ((i * 5) + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
