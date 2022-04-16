@@ -218,7 +218,7 @@ static inline void flag_similar_characters_step(const common::BlockPatternMatchV
         flagged.P_flag[word] |= blsi(PM_j);
         flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
     }
-};
+}
 
 template <typename InputIt1, typename InputIt2>
 static inline FlaggedCharsMultiword
