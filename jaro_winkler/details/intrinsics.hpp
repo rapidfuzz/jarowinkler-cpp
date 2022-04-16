@@ -16,8 +16,8 @@ template <typename T>
 T bit_mask_lsb(int n)
 {
     T mask = -1;
-    if (n < (int)(sizeof(T) * 8)) {
-        mask += (T)1 << n;
+    if (n < static_cast<int>(sizeof(T) * 8)) {
+        mask += static_cast<T>(1) << n;
     }
     return mask;
 }

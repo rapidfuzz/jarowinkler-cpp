@@ -43,7 +43,7 @@ add_library(jaro_winkler INTERFACE)
 add_library(jaro_winkler::jaro_winkler ALIAS jaro_winkler)
 
 set_target_properties(jaro_winkler PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
-target_compile_features(jaro_winkler INTERFACE cxx_std_11)
+target_compile_features(jaro_winkler INTERFACE cxx_std_14)
 
 target_include_directories(jaro_winkler
     INTERFACE

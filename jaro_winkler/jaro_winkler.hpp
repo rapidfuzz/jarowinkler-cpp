@@ -75,8 +75,8 @@ struct CachedJaroWinklerSimilarity {
     }
 
     template <typename S1>
-    CachedJaroWinklerSimilarity(const S1& s1, double prefix_weight_ = 0.1)
-        : CachedJaroWinklerSimilarity(std::begin(s1), std::end(s1), prefix_weight_)
+    CachedJaroWinklerSimilarity(const S1& s1_, double prefix_weight_ = 0.1)
+        : CachedJaroWinklerSimilarity(std::begin(s1_), std::end(s1_), prefix_weight_)
     {}
 
     template <typename InputIt2>
@@ -152,7 +152,7 @@ struct CachedJaroSimilarity {
     {}
 
     template <typename S1>
-    CachedJaroSimilarity(const S1& s1) : CachedJaroSimilarity(std::begin(s1), std::end(s1))
+    CachedJaroSimilarity(const S1& s1_) : CachedJaroSimilarity(std::begin(s1_), std::end(s1_))
     {}
 
     template <typename InputIt2>

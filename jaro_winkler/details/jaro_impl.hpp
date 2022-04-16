@@ -35,8 +35,10 @@ static inline double jaro_calculate_similarity(int64_t P_len, int64_t T_len, int
                                                int64_t Transpositions)
 {
     Transpositions /= 2;
-    double Sim = (double)CommonChars / (double)P_len + (double)CommonChars / (double)T_len +
-                 (double)(CommonChars - Transpositions) / (double)CommonChars;
+    double Sim = 0;
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
+    Sim += (static_cast<double>(CommonChars) - static_cast<double>(Transpositions)) / static_cast<double>(CommonChars);
     return Sim / 3.0;
 }
 
@@ -47,8 +49,8 @@ static inline bool jaro_length_filter(int64_t P_len, int64_t T_len, double score
 {
     if (!T_len || !P_len) return false;
 
-    double min_len = (double)std::min(P_len, T_len);
-    double Sim = (double)min_len / (double)P_len + (double)min_len / (double)T_len + 1.0;
+    double min_len = static_cast<double>(std::min(P_len, T_len));
+    double Sim = min_len / static_cast<double>(P_len) + min_len / static_cast<double>(T_len) + 1.0;
     Sim /= 3.0;
     return Sim >= score_cutoff;
 }
@@ -61,7 +63,10 @@ static inline bool jaro_common_char_filter(int64_t P_len, int64_t T_len, int64_t
 {
     if (!CommonChars) return false;
 
-    double Sim = (double)CommonChars / (double)P_len + (double)CommonChars / (double)T_len + 1.0;
+    double Sim = 0;
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
+    Sim += 1.0;
     Sim /= 3.0;
     return Sim >= score_cutoff;
 }
@@ -109,7 +114,7 @@ flag_similar_characters_word(const common::PatternMatchVector& PM, InputIt1 P_fi
         uint64_t PM_j = PM.get(T_first[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= (uint64_t)(PM_j != 0) << j;
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
 
         BoundMask = (BoundMask << 1) | 1;
     }
@@ -118,7 +123,7 @@ flag_similar_characters_word(const common::PatternMatchVector& PM, InputIt1 P_fi
         uint64_t PM_j = PM.get(T_first[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= (uint64_t)(PM_j != 0) << j;
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
 
         BoundMask <<= 1;
     }
@@ -148,7 +153,7 @@ flag_similar_characters_word(const common::BlockPatternMatchVector& PM, InputIt1
         uint64_t PM_j = PM.get(0, T_first[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= (uint64_t)(PM_j != 0) << j;
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
 
         BoundMask = (BoundMask << 1) | 1;
     }
@@ -157,7 +162,7 @@ flag_similar_characters_word(const common::BlockPatternMatchVector& PM, InputIt1
         uint64_t PM_j = PM.get(0, T_first[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= (uint64_t)(PM_j != 0) << j;
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
 
         BoundMask <<= 1;
     }
@@ -182,7 +187,7 @@ static inline void flag_similar_characters_step(const common::BlockPatternMatchV
                         (~flagged.P_flag[word]);
 
         flagged.P_flag[word] |= blsi(PM_j);
-        flagged.T_flag[j_word] |= (uint64_t)(PM_j != 0) << j_pos;
+        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
         return;
     }
 
@@ -211,7 +216,7 @@ static inline void flag_similar_characters_step(const common::BlockPatternMatchV
         uint64_t PM_j = PM.get(word, T_j) & BoundMask.last_mask & (~flagged.P_flag[word]);
 
         flagged.P_flag[word] |= blsi(PM_j);
-        flagged.T_flag[j_word] |= (uint64_t)(PM_j != 0) << j_pos;
+        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
     }
 };
 
@@ -239,14 +244,14 @@ flag_similar_characters_block(const common::BlockPatternMatchVector& PM, InputIt
     BoundMask.words = 1 + start_range / 64;
     BoundMask.empty_words = 0;
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
-    BoundMask.first_mask = (uint64_t)-1;
+    BoundMask.first_mask = ~UINT64_C(0);
 
     for (int64_t j = 0; j < T_len; ++j) {
         flag_similar_characters_step(PM, T_first[j], flagged, j, BoundMask);
 
         if (j + Bound + 1 < P_len) {
             BoundMask.last_mask = (BoundMask.last_mask << 1) | 1;
-            if (j + Bound + 2 < P_len && BoundMask.last_mask == (uint64_t)-1) {
+            if (j + Bound + 2 < P_len && BoundMask.last_mask == ~UINT64_C(0)) {
                 BoundMask.last_mask = 0;
                 BoundMask.words++;
             }
@@ -255,7 +260,7 @@ flag_similar_characters_block(const common::BlockPatternMatchVector& PM, InputIt
         if (j >= Bound) {
             BoundMask.first_mask <<= 1;
             if (BoundMask.first_mask == 0) {
-                BoundMask.first_mask = (uint64_t)-1;
+                BoundMask.first_mask = ~UINT64_C(0);
                 BoundMask.words--;
                 BoundMask.empty_words++;
             }
@@ -359,7 +364,7 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
     }
 
     if (P_len == 1 && T_len == 1) {
-        return (double)(P_first[0] == T_first[0]);
+        return static_cast<double>(P_first[0] == T_first[0]);
     }
 
     /* since jaro uses a sliding window some parts of T/P might never be in
@@ -429,7 +434,7 @@ double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_fir
     }
 
     if (P_len == 1 && T_len == 1) {
-        return (double)(P_first[0] == T_first[0]);
+        return static_cast<double>(P_first[0] == T_first[0]);
     }
 
     /* since jaro uses a sliding window some parts of T/P might never be in

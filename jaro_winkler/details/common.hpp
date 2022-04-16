@@ -12,6 +12,7 @@
 #include <vector>
 
 namespace jaro_winkler {
+
 namespace common {
 
 /**
@@ -43,28 +44,7 @@ constexpr double result_cutoff(double result, double score_cutoff)
 template <typename T, typename U>
 T ceildiv(T a, U divisor)
 {
-    return (T)(a / divisor) + (T)((a % divisor) != 0);
-}
-
-/**
- * @brief Finds the first mismatching pair of elements from two ranges:
- * one defined by [first1, last1) and another defined by [first2,last2).
- * Similar implementation to std::mismatch from C++14
- *
- * @param first1, last1	-	the first range of the elements
- * @param first2, last2	-	the second range of the elements
- *
- * @return std::pair with iterators to the first two non-equal elements.
- */
-template <typename InputIt1, typename InputIt2>
-std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                       InputIt2 last2)
-{
-    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
-        ++first1;
-        ++first2;
-    }
-    return std::pair<InputIt1, InputIt2>(first1, first2);
+    return static_cast<T>(a / divisor) + static_cast<T>((a % divisor) != 0);
 }
 
 /**
@@ -74,7 +54,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
 {
     int64_t prefix = static_cast<int64_t>(
-        std::distance(first1, common::mismatch(first1, last1, first2, last2).first));
+        std::distance(first1, std::mismatch(first1, last1, first2, last2).first));
     first1 += prefix;
     first2 += prefix;
     return prefix;
@@ -98,7 +78,7 @@ struct BitvectorHashmap {
     template <typename CharT>
     void insert_mask(CharT key, uint64_t mask)
     {
-        uint64_t i = lookup((uint64_t)key);
+        uint64_t i = lookup(static_cast<uint64_t>(key));
         m_map[i].key = key;
         m_map[i].value |= mask;
     }
@@ -106,7 +86,7 @@ struct BitvectorHashmap {
     template <typename CharT>
     uint64_t get(CharT key) const
     {
-        return m_map[lookup((uint64_t)key)].value;
+        return m_map[lookup(static_cast<uint64_t>(key))].value;
     }
 
 private:
