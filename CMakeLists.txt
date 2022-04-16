@@ -12,14 +12,14 @@ endif()
 option(JARO_WINKLER_BUILD_TESTING "Build tests" OFF)
 option(JARO_WINKLER_BUILD_BENCHMARKS "Build benchmarks" OFF)
 
-# JaroWinkler's build breaks if done in-tree. You probably should not build
-# things in tree anyway, but we can allow projects that include JaroWinkler
+# jaro_winkler's build breaks if done in-tree. You probably should not build
+# things in tree anyway, but we can allow projects that include jaro_winkler
 # as a subproject to build in-tree as long as it is not in our tree.
 if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(JaroWinkler LANGUAGES CXX VERSION 1.0.0)
+project(jaro_winkler LANGUAGES CXX VERSION 1.0.0)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
@@ -39,7 +39,7 @@ set(PUBLIC_HEADERS
 
 add_library(jaro_winkler INTERFACE)
 
-# provide a namespaced alias for clients to 'link' against if JaroWinkler is included as a sub-project
+# provide a namespaced alias for clients to 'link' against if jaro_winkler is included as a sub-project
 add_library(jaro_winkler::jaro_winkler ALIAS jaro_winkler)
 
 set_target_properties(jaro_winkler PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
@@ -75,23 +75,23 @@ if(JARO_WINKLER_BUILD_FUZZERS)
     # add_subdirectory(fuzzing)
 endif()
 
-# Only perform the installation steps when JaroWinkler is not being used as
+# Only perform the installation steps when jaro_winkler is not being used as
 # a subproject via `add_subdirectory`
 if (NOT_SUBPROJECT)
-    set(JARO_WINKLER_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/rapidfuzz")
+    set(JARO_WINKLER_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/jaro_winkler")
 
     install(
         TARGETS
           jaro_winkler
         EXPORT
-          JaroWinklerTargets
+          jaro_winklerTargets
         DESTINATION
           ${CMAKE_INSTALL_LIBDIR}
     )
 
     install(
         EXPORT
-          JaroWinklerTargets
+          jaro_winklerTargets
         NAMESPACE
           jaro_winkler::
         DESTINATION

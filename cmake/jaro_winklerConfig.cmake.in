@@ -5,5 +5,5 @@ if(NOT TARGET jaro_winkler::jaro_winkler)
     # Provide path for scripts
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 
-    include(${CMAKE_CURRENT_LIST_DIR}/JaroWinklerTargets.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/jaro_winklerTargets.cmake)
 endif()
