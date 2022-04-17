@@ -5,11 +5,7 @@
 #include <jaro_winkler/details/common.hpp>
 #include <jaro_winkler/details/jaro_impl.hpp>
 
-#include <cmath>
-#include <numeric>
 #include <stdexcept>
-#include <tuple>
-#include <vector>
 
 namespace jaro_winkler {
 

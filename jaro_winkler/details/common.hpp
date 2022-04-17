@@ -2,6 +2,7 @@
 /* Copyright © 2022 Max Bachmann */
 
 #pragma once
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
