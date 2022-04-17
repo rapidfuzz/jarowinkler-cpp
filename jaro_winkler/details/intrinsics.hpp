@@ -47,7 +47,15 @@ static inline int64_t popcount(uint64_t x)
 template <typename T>
 T blsi(T a)
 {
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(push)
+/* unary minus operator applied to unsigned type, result still unsigned */
+#  pragma warning(disable: 4146)
+#endif
     return a & -a;
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(pop)
+#endif
 }
 
 /**

@@ -171,6 +171,17 @@ struct PatternMatchVector {
         }
     }
 
+    /**
+     * combat func for BlockPatternMatchVector
+     */
+    template <typename CharT>
+    uint64_t get(int64_t block, CharT key) const
+    {
+        (void)block;
+        assert(block == 0);
+        return get(key);
+    }
+
 private:
     BitvectorHashmap m_map;
     std::array<uint64_t, 256> m_extendedAscii;
@@ -213,6 +224,15 @@ struct BlockPatternMatchVector {
             int64_t pos = i % 64;
             insert(block, first[i], pos);
         }
+    }
+
+    /**
+     * combat func for PatternMatchVector
+     */
+    template <typename CharT>
+    uint64_t get(CharT key) const
+    {
+        return get(0, key);
     }
 
     template <typename CharT>
