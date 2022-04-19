@@ -32,17 +32,11 @@ set(TEST_DIR ${BASE_DIR}/test)
 set(BENCHMARK_DIR ${BASE_DIR}/tests/bench)
 set(EXAMPLES_DIR ${BASE_DIR}/examples)
 
-# Please keep these ordered alphabetically
-set(PUBLIC_HEADERS
-    ${SOURCES_DIR}/jaro_winkler.hpp
-)
-
 add_library(jaro_winkler INTERFACE)
 
 # provide a namespaced alias for clients to 'link' against if jaro_winkler is included as a sub-project
 add_library(jaro_winkler::jaro_winkler ALIAS jaro_winkler)
 
-set_target_properties(jaro_winkler PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 target_compile_features(jaro_winkler INTERFACE cxx_std_14)
 
 target_include_directories(jaro_winkler
