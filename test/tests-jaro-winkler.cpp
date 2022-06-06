@@ -123,10 +123,14 @@ TEST_CASE("JaroWinklerTest")
 
             for (const auto& name2 : names)
             {
-                int Bound = static_cast<int>(get_jaro_bound(name1, name2));
+                auto P_first = name1.begin();
+                auto P_last = name1.end();
+                auto T_first = name2.begin();
+                auto T_last = name2.end();
+
+                int Bound = static_cast<int>(jaro_winkler::detail::jaro_bounds(P_first, P_last, T_first, T_last));
                 auto flagged_original = flag_similar_characters_original(name1, name2);
-                auto flagged_bitparallel = jaro_winkler::detail::flag_similar_characters_word(PM,
-                    name1.begin(), name1.end(), name2.begin(), name2.end(), Bound);
+                auto flagged_bitparallel = jaro_winkler::detail::flag_similar_characters_word(PM, P_first, P_last, T_first, T_last, Bound);
 
                 INFO("Name1: " << name1 << ", Name2: " << name2);
 

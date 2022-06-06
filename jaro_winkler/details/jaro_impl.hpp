@@ -291,21 +291,15 @@ count_transpositions_block(const common::BlockPatternMatchVector& PM, InputIt1 T
     return Transpositions;
 }
 
+/**
+ * @brief find bounds and skip out of bound parts of the sequences
+ *
+ */
 template <typename InputIt1, typename InputIt2>
-double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
-                       double score_cutoff)
+int64_t jaro_bounds(InputIt1 P_first, InputIt1& P_last, InputIt2 T_first, InputIt2& T_last)
 {
     int64_t P_len = std::distance(P_first, P_last);
     int64_t T_len = std::distance(T_first, T_last);
-
-    /* filter out based on the length difference between the two strings */
-    if (!jaro_length_filter(P_len, T_len, score_cutoff)) {
-        return 0.0;
-    }
-
-    if (P_len == 1 && T_len == 1) {
-        return static_cast<double>(P_first[0] == T_first[0]);
-    }
 
     /* since jaro uses a sliding window some parts of T/P might never be in
      * range an can be removed ahead of time
@@ -323,6 +317,26 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
             P_last = P_first + T_len + Bound;
         }
     }
+    return Bound;
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
+                       double score_cutoff)
+{
+    int64_t P_len = std::distance(P_first, P_last);
+    int64_t T_len = std::distance(T_first, T_last);
+
+    /* filter out based on the length difference between the two strings */
+    if (!jaro_length_filter(P_len, T_len, score_cutoff)) {
+        return 0.0;
+    }
+
+    if (P_len == 1 && T_len == 1) {
+        return static_cast<double>(P_first[0] == T_first[0]);
+    }
+
+    int64_t Bound = jaro_bounds(P_first, P_last, T_first, T_last);
 
     /* common prefix never includes Transpositions */
     int64_t CommonChars = common::remove_common_prefix(P_first, P_last, T_first, T_last);
@@ -377,22 +391,7 @@ double jaro_similarity(const common::BlockPatternMatchVector& PM, InputIt1 P_fir
         return static_cast<double>(P_first[0] == T_first[0]);
     }
 
-    /* since jaro uses a sliding window some parts of T/P might never be in
-     * range an can be removed ahead of time
-     */
-    int64_t Bound = 0;
-    if (T_len > P_len) {
-        Bound = T_len / 2 - 1;
-        if (T_len > P_len + Bound) {
-            T_last = T_first + P_len + Bound;
-        }
-    }
-    else {
-        Bound = P_len / 2 - 1;
-        if (P_len > T_len + Bound) {
-            P_last = P_first + T_len + Bound;
-        }
-    }
+    int64_t Bound = jaro_bounds(P_first, P_last, T_first, T_last);
 
     /* common prefix never includes Transpositions */
     int64_t CommonChars = 0;
